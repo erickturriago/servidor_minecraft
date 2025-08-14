@@ -3,7 +3,7 @@
 
 # --- CONFIGURACIÓN ---
 # Frecuencia del backup en horas. Por ejemplo, 6 para cada 6 horas.
-FREQUENCY_HOURS=6
+FREQUENCY_HOURS=2
 # Nombre del script a ejecutar, relativo a la carpeta 'linux'
 BACKUP_SCRIPT="backup.sh"
 # ---------------------

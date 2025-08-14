@@ -4,7 +4,7 @@
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
 GITHUB_USER="erickturriago" # Agrega tu nombre de usuario de GitHub
-MAX_BACKUPS=15
+MAX_BACKUPS=20
 # ---------------------
 
 # Usa realpath para obtener una ruta absoluta y fiable al directorio base del proyecto
@@ -94,7 +94,17 @@ function hacer_backup_y_subir() {
     echo "--- Sincronizacion con GitHub y gestion de backups completada."
 }
 
+# Comprobación de servicio activo
+
+if docker logs mc-server | tail -n 1 | grep -q "Server empty for 60 seconds"; then
+    echo "Servidor inactivo, deteniendo script."
+    exit 0
+fi
+
+echo "Servidor activo, continuando..."
+
 # --- Flujo de ejecución completo ---
+
 detener_stack
 hacer_backup_y_subir
 levantar_stack

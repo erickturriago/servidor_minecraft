@@ -3,7 +3,7 @@
 # --- CONFIGURACIÓN ---
 $stackName = "minecraft_stack"
 $githubRepo = "https://github.com/erickturriago/servidor_minecraft.git"
-$maxBackups = 15
+$maxBackups = 20
 # ---------------------
 
 $baseDir = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "..\..\"
@@ -89,6 +89,15 @@ function Hacer-Backup-Y-Subir {
     }
     Write-Host "--- Sincronizacion con GitHub y gestion de backups completada."
 }
+
+# Comprobación de servicio activo
+
+if ((docker logs mc-server | Select-Object -Last 1) -match "Server empty for 60 seconds") {
+    Write-Host "Servidor inactivo, deteniendo script."
+    exit
+}
+
+Write-Host "Servidor activo, continuando..."
 
 # --- Flujo de ejecución completo ---
 Detener-Stack

@@ -7,14 +7,6 @@ $compressedData = "data.zip"
 # ---------------------
 
 # --- FUNCIONES ---
-
-
-
-
-
-
-
-
 function Check-And-Install-Git {
     if (-not (Get-Command "git.exe" -ErrorAction SilentlyContinue)) {
         Write-Host "--- Git no encontrado. Instalando..."
@@ -25,7 +17,6 @@ function Check-And-Install-Git {
     }
 
 }
-
 function Check-And-Install-Docker {
     if (-not (Get-Command "docker.exe" -ErrorAction SilentlyContinue)) {
         Write-Host "--- Docker no encontrado. Instalando..."

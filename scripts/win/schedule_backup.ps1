@@ -2,7 +2,7 @@
 # Es necesario ejecutar esto como Administrador en PowerShell
 
 # --- CONFIGURACIÓN ---
-$frequencyHours = 6
+$frequencyHours = 2
 $backupScript = "backup.ps1"
 $taskName = "MinecraftServerBackup"
 # ---------------------
