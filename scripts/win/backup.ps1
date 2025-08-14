@@ -66,7 +66,7 @@ function Hacer-Backup-Y-Subir {
         git remote add origin $githubRepo
     }
 
-    Set-Content -Path ".gitignore" -Value "data/"
+    Add-Content -Path ".gitignore" -Value @("data/", "token.txt")
 
     # Limpia el cache de Git de la carpeta data/ antes de proceder
     git rm -r --cached "data" | Out-Null
