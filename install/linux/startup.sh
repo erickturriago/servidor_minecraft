@@ -7,6 +7,14 @@ INSTALL_DIR="/opt/servidor_minecraft"
 # ---------------------
 
 # --- FUNCIONES ---
+get_github_token() {
+    echo ""
+    read -p "--- Por favor, ingresa tu Personal Access Token (PAT) de GitHub: " GITHUB_TOKEN
+    export GITHUB_TOKEN
+    echo "--- Token de GitHub configurado en la variable de entorno GITHUB_TOKEN para esta sesión."
+    echo ""
+}
+
 check_and_install_git() {
     if ! command -v git &> /dev/null; then
         echo "--- Git no encontrado. Instalando..."
@@ -21,6 +29,7 @@ check_and_install_git() {
     git config --global user.email "turriago-erick@hotmail.com"
     git config --global user.name "Erick Turriago"
     echo "--- Git configurado con autor."
+    get_github_token # Llama a la nueva función para pedir el token
 }
 
 check_and_install_unzip() {
@@ -53,11 +62,11 @@ check_and_install_docker() {
         sudo mkdir -p /etc/apt/keyrings
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
         echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
         sudo apt-get update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-        
+
         sudo usermod -aG docker "$USER"
         echo "--- Docker instalado. Por favor, cierra la sesion y vuelve a entrar para que los cambios tengan efecto."
     else
