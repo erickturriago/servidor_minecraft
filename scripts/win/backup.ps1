@@ -1,9 +1,16 @@
-# Script para crear un backup del mundo y los plugins, deteniendo y reiniciando el servidor.
+# Script para crear un backup y subirlo a Git, deteniendo y reiniciando el servidor.
 
+# --- CONFIGURACIÓN ---
 $stackName = "minecraft_stack"
+$githubRepo = "https://github.com/tu_usuario/erickturriago/servidor_minecraft.git"
+$githubToken = "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"
+$maxBackups = 15
+# ---------------------
+
 $baseDir = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "..\..\"
 $backupDir = Join-Path -Path $baseDir -ChildPath "backups"
 $dataDir = Join-Path -Path $baseDir -ChildPath "data"
+$compressedData = Join-Path -Path $baseDir -ChildPath "data.zip"
 
 function Detener-Stack {
     Set-Location -Path $baseDir
@@ -19,15 +26,57 @@ function Levantar-Stack {
     Write-Host "--- Stack '$stackName' levantado con exito."
 }
 
-function Hacer-Backup {
+function Hacer-Backup-Y-Subir {
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $backupFile = Join-Path -Path $backupDir -ChildPath "minecraft-backup-$timestamp.zip"
     
-    Write-Host "--- Creando backup de los mundos y plugins en $backupFile..."
+    # --- Backup local ---
+    Write-Host "--- Creando backup local de los mundos y plugins en $backupFile..."
     Compress-Archive -Path (Join-Path $dataDir "world"), (Join-Path $dataDir "world_nether"), (Join-Path $dataDir "world_the_end"), (Join-Path $dataDir "plugins") -DestinationPath $backupFile -Force
-    Write-Host "--- Backup completado: $backupFile"
+    Write-Host "--- Backup local completado: $backupFile"
+
+    # --- Preparar para Git ---
+    Write-Host "--- Comprimiendo el mundo y los plugins para subir a Git..."
+    if (Test-Path -Path $compressedData) {
+        Remove-Item -Path $compressedData -Force
+    }
+    Compress-Archive -Path (Join-Path $dataDir "world"), (Join-Path $dataDir "world_nether"), (Join-Path $dataDir "world_the_end"), (Join-Path $dataDir "plugins") -DestinationPath $compressedData -Force
+    Write-Host "--- Archivo 'data.zip' creado con exito."
+
+    # --- Subir a Git ---
+    Set-Location -Path $baseDir
+    $gitUrlWithToken = "https://oauth2:$githubToken@github.com/erickturriago/servidor_minecraft.git"
+
+    if (-not (Test-Path -Path ".git" -PathType Container)) {
+        git init
+        git remote add origin $githubRepo
+    }
+
+    Set-Content -Path ".gitignore" -Value "data/"
+
+    # Limpia el cache de Git de la carpeta data/ antes de proceder
+    git rm -r --cached "$dataDir" | Out-Null
+    
+    Write-Host "--- Agregando archivos al control de versiones..."
+    git add .
+    git commit -m "Backup automatico - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+
+    Write-Host "--- Subiendo cambios a GitHub..."
+    git push $gitUrlWithToken main
+
+    Write-Host "--- Gestionando backups (maximo $maxBackups copias)..."
+    $backups = Get-ChildItem -Path $backupDir -Filter "minecraft-backup-*.zip" | Sort-Object CreationTime -Descending
+    if ($backups.Count -gt $maxBackups) {
+        $backupsToDelete = $backups | Select-Object -Skip $maxBackups
+        foreach ($backup in $backupsToDelete) {
+            Write-Host "--- Borrando el backup mas antiguo: $($backup.Name)"
+            Remove-Item -Path $backup.FullName -Force
+        }
+    }
+    Write-Host "--- Sincronizacion con GitHub y gestion de backups completada."
 }
 
+# --- Flujo de ejecución completo ---
 Detener-Stack
-Hacer-Backup
+Hacer-Backup-Y-Subir
 Levantar-Stack
