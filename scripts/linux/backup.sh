@@ -5,7 +5,7 @@
 STACK_NAME="minecraft_stack"
 GITHUB_USER="erickturriago" # Agrega tu nombre de usuario de GitHub
 # Aquí está tu nuevo token de acceso personal (PAT)
-GITHUB_TOKEN="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"
+GITHUB_TOKEN="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"
 MAX_BACKUPS=15
 # ---------------------
 
