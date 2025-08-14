@@ -4,7 +4,7 @@
 # --- CONFIGURACIÓN ---
 $stackName = "minecraft_stack"
 $githubRepo = "https://github.com/erickturriago/servidor_minecraft.git"
-$githubToken = "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"
+$githubToken = "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"
 $maxBackups = 15
 # ---------------------
 
