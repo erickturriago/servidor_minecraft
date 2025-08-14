@@ -55,7 +55,7 @@ function Hacer-Backup-Y-Subir {
     Set-Content -Path ".gitignore" -Value "data/"
 
     # Limpia el cache de Git de la carpeta data/ antes de proceder
-    git rm -r --cached "$dataDir" | Out-Null
+    git rm -r --cached "data" | Out-Null
     
     Write-Host "--- Agregando archivos al control de versiones..."
     git add .
