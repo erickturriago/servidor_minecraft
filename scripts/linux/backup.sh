@@ -3,8 +3,9 @@
 
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
-GITHUB_REPO="https://github.com/erickturriago/servidor_minecraft.git"
+GITHUB_USER="erickturriago"
 GITHUB_TOKEN="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"
+GIT_URL_WITH_TOKEN="https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/servidor_minecraft.git"
 MAX_BACKUPS=15
 # ---------------------
 
@@ -18,13 +19,13 @@ cd "$BASE_DIR" || exit
 function detener_stack() {
     echo "--- Deteniendo stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" down
-    echo "--- Stack '$STACK_NAME' detenido con exito."
+    echo "--- Stack '$STACK_NAME' detenido con éxito."
 }
 
 function levantar_stack() {
     echo "--- Levantando stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" up -d
-    echo "--- Stack '$STACK_NAME' levantado con exito."
+    echo "--- Stack '$STACK_NAME' levantado con éxito."
 }
 
 function hacer_backup_y_subir() {
@@ -32,55 +33,54 @@ function hacer_backup_y_subir() {
     local backup_file="$BACKUP_DIR/minecraft-backup-$timestamp.zip"
 
     # --- Backup local ---
-    echo "--- Creando backup local de los mundos y plugins en $backup_file..."
+    echo "--- Creando backup local en $backup_file..."
     cd "$DATA_DIR"
     zip -r -q "$backup_file" world world_nether world_the_end plugins
     cd "$BASE_DIR"
-    echo "--- Backup local completado: $backup_file"
+    echo "--- Backup local completado."
 
-    # --- Preparar para Git ---
-    echo "--- Comprimiendo el mundo y los plugins para subir a Git..."
+    # --- Preparar data.zip ---
+    echo "--- Comprimiendo mundos y plugins para subir a Git..."
     rm -f "$COMPRESSED_DATA"
     cd "$DATA_DIR"
     zip -r -q "$COMPRESSED_DATA" world world_nether world_the_end plugins
     cd "$BASE_DIR"
-    echo "--- Archivo 'data.zip' creado con exito."
+    echo "--- data.zip creado."
 
-    # --- Subir a Git ---
-    # La variable GITHUB_USER se usará para la autenticación
-    GITHUB_USER="erickturriago"
-    GIT_URL_WITH_TOKEN="https://$GITHUB_USER:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
-
+    # --- Configuración de Git ---
     git rm -r --cached "data" >/dev/null 2>&1
 
     if [ ! -d ".git" ]; then
+        echo "--- Inicializando repositorio Git..."
         git init
-        git remote add origin "$GITHUB_REPO"
+        git branch -M main
+        git remote add origin "$GIT_URL_WITH_TOKEN"
     else
-        # Limpia y vuelve a configurar el remote para asegurar que el token sea usado
+        echo "--- Configurando remote de Git con token..."
         git remote remove origin >/dev/null 2>&1
         git remote add origin "$GIT_URL_WITH_TOKEN"
     fi
 
-    echo "--- Agregando archivos al control de versiones..."
+    # --- Commit y push ---
     echo "data/" > .gitignore
     git add .
-    git commit -m "Backup automatico - $(date +"%Y-%m-%d %H:%M:%S")"
+    git commit -m "Backup automático - $(date +"%Y-%m-%d %H:%M:%S")" || echo "--- No hay cambios para commitear."
 
     echo "--- Subiendo cambios a GitHub..."
-    git push origin main
+    git push -u origin main
 
-    echo "--- Gestionando backups (maximo $MAX_BACKUPS copias)..."
+    # --- Gestión de backups locales ---
+    echo "--- Gestionando backups (máximo $MAX_BACKUPS)..."
     while [ $(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup' | wc -l) -gt $MAX_BACKUPS ]; do
         OLDEST_BACKUP=$(ls -1t "$BACKUP_DIR" | grep 'minecraft-backup' | tail -n 1)
-        echo "--- Borrando el backup mas antiguo: $OLDEST_BACKUP"
+        echo "--- Borrando backup más antiguo: $OLDEST_BACKUP"
         rm "$BACKUP_DIR/$OLDEST_BACKUP"
     done
 
-    echo "--- Sincronizacion con GitHub y gestion de backups completada."
+    echo "--- Backup subido y gestión completada."
 }
 
-# --- Flujo de ejecución completo ---
+# --- Ejecución ---
 detener_stack
 hacer_backup_y_subir
 levantar_stack
