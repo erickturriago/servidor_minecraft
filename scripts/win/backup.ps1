@@ -11,6 +11,20 @@ $backupDir = Join-Path -Path $baseDir -ChildPath "backups"
 $dataDir = Join-Path -Path $baseDir -ChildPath "data"
 $compressedData = Join-Path -Path $baseDir -ChildPath "data.zip"
 
+# --- LECTURA DEL TOKEN ---
+# Lee el token del archivo token.txt
+$tokenFilePath = Join-Path -Path $baseDir -ChildPath "token.txt"
+if (Test-Path -Path $tokenFilePath) {
+    $githubToken = Get-Content -Path $tokenFilePath | Select-Object -First 1
+    if ([string]::IsNullOrEmpty($githubToken)) {
+        Write-Host "--- ERROR: El archivo token.txt está vacío."
+        exit
+    }
+} else {
+    Write-Host "--- ERROR: Archivo token.txt no encontrado en la raíz del proyecto. Crea uno y añade tu token de GitHub."
+    exit
+}
+
 function Detener-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Deteniendo stack: $stackName..."
@@ -44,8 +58,8 @@ function Hacer-Backup-Y-Subir {
 
     # --- Subir a Git ---
     Set-Location -Path $baseDir
-    # El token se lee de la variable de entorno GITHUB_TOKEN
-    $gitUrlWithToken = "https://oauth2:$env:GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
+    # El token se lee del archivo token.txt
+    $gitUrlWithToken = "https://oauth2:$githubToken@github.com/erickturriago/servidor_minecraft.git"
 
     if (-not (Test-Path -Path ".git" -PathType Container)) {
         git init
