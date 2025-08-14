@@ -16,6 +16,19 @@ COMPRESSED_DATA="$BASE_DIR/data.zip"
 # Navega al directorio base al inicio del script para asegurar la consistencia
 cd "$BASE_DIR" || exit
 
+# --- LECTURA DEL TOKEN ---
+# Lee el token del archivo token.txt
+if [ -f "$BASE_DIR/token.txt" ]; then
+    GITHUB_TOKEN=$(head -n 1 "$BASE_DIR/token.txt")
+    if [ -z "$GITHUB_TOKEN" ]; then
+        echo "--- ERROR: El archivo token.txt está vacío."
+        exit 1
+    fi
+else
+    echo "--- ERROR: Archivo token.txt no encontrado en la raíz del proyecto. Crea uno y añade tu token de GitHub."
+    exit 1
+fi
+
 function detener_stack() {
     echo "--- Deteniendo stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" down
@@ -47,7 +60,7 @@ function hacer_backup_y_subir() {
 
     # --- Subir a Git ---
     # Usa el nombre de usuario para la autenticacion, es mas fiable
-    # El token se lee de la variable de entorno GITHUB_TOKEN
+    # El token se lee del archivo token.txt
     GIT_AUTH_URL="https://$GITHUB_USER:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
 
     # Limpia el cache de Git de la carpeta data/
