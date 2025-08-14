@@ -9,14 +9,14 @@ DATA_DIR="$BASE_DIR/data"
 function detener_stack() {
     cd "$BASE_DIR" || exit
     echo "--- Deteniendo stack: $STACK_NAME..."
-    docker-compose -p "$STACK_NAME" down
+    docker compose -p "$STACK_NAME" down
     echo "--- Stack '$STACK_NAME' detenido con exito."
 }
 
 function levantar_stack() {
     cd "$BASE_DIR" || exit
     echo "--- Levantando stack: $STACK_NAME..."
-    docker-compose -p "$STACK_NAME" up -d
+    docker compose -p "$STACK_NAME" up -d
     echo "--- Stack '$STACK_NAME' levantado con exito."
 }
 

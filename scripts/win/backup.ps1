@@ -15,14 +15,14 @@ $compressedData = Join-Path -Path $baseDir -ChildPath "data.zip"
 function Detener-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Deteniendo stack: $stackName..."
-    docker-compose -p $stackName down
+    docker compose -p $stackName down
     Write-Host "--- Stack '$stackName' detenido con exito."
 }
 
 function Levantar-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Levantando stack: $stackName..."
-    docker-compose -p $stackName up -d
+    docker compose -p $stackName up -d
     Write-Host "--- Stack '$stackName' levantado con exito."
 }
 

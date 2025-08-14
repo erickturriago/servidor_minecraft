@@ -30,7 +30,7 @@ if ($choice -ge 1 -and $choice -le $backups.Count) {
 
     Write-Host "--- Deteniendo el servidor para la restauracion..."
     Set-Location -Path $baseDir
-    docker-compose -p $stackName down
+    docker compose -p $stackName down
 
     Write-Host "--- Restaurando desde $($selectedBackup.Name)..."
 
@@ -41,7 +41,7 @@ if ($choice -ge 1 -and $choice -le $backups.Count) {
     Expand-Archive -Path $selectedBackup.FullName -DestinationPath $dataDir -Force
 
     Write-Host "--- Iniciando el servidor nuevamente..."
-    docker-compose -p $stackName up -d
+    docker compose -p $stackName up -d
     Write-Host "--- Restauracion completada."
 } else {
     Write-Host "--- Seleccion invalida."
