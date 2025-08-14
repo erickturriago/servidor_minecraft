@@ -1,10 +1,8 @@
 # Script para crear un backup y subirlo a Git, deteniendo y reiniciando el servidor.
-# Es necesario ejecutar esto en PowerShell
 
 # --- CONFIGURACIÓN ---
 $stackName = "minecraft_stack"
 $githubRepo = "https://github.com/erickturriago/servidor_minecraft.git"
-$githubToken = "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"
 $maxBackups = 15
 # ---------------------
 
@@ -16,21 +14,21 @@ $compressedData = Join-Path -Path $baseDir -ChildPath "data.zip"
 function Detener-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Deteniendo stack: $stackName..."
-    docker-compose -p $stackName down
+    docker compose -p $stackName down
     Write-Host "--- Stack '$stackName' detenido con exito."
 }
 
 function Levantar-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Levantando stack: $stackName..."
-    docker-compose -p $stackName up -d
+    docker compose -p $stackName up -d
     Write-Host "--- Stack '$stackName' levantado con exito."
 }
 
 function Hacer-Backup-Y-Subir {
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $backupFile = Join-Path -Path $backupDir -ChildPath "minecraft-backup-$timestamp.zip"
-    
+
     # --- Backup local ---
     Write-Host "--- Creando backup local de los mundos y plugins en $backupFile..."
     Compress-Archive -Path (Join-Path $dataDir "world"), (Join-Path $dataDir "world_nether"), (Join-Path $dataDir "world_the_end"), (Join-Path $dataDir "plugins") -DestinationPath $backupFile -Force
@@ -46,28 +44,25 @@ function Hacer-Backup-Y-Subir {
 
     # --- Subir a Git ---
     Set-Location -Path $baseDir
-    $githubUser = "erickturriago"
-    $gitUrlWithToken = "https://$githubUser:$githubToken@github.com/erickturriago/servidor_minecraft.git"
+    # El token se lee de la variable de entorno GITHUB_TOKEN
+    $gitUrlWithToken = "https://oauth2:$env:GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
 
     if (-not (Test-Path -Path ".git" -PathType Container)) {
         git init
         git remote add origin $githubRepo
-    } else {
-        git remote remove origin -ErrorAction SilentlyContinue | Out-Null
-        git remote add origin $gitUrlWithToken
     }
 
-    Write-Host "--- Agregando archivos al control de versiones..."
     Set-Content -Path ".gitignore" -Value "data/"
 
     # Limpia el cache de Git de la carpeta data/ antes de proceder
-    git rm -r --cached "data" -ErrorAction SilentlyContinue | Out-Null
-    
+    git rm -r --cached "data" | Out-Null
+
+    Write-Host "--- Agregando archivos al control de versiones..."
     git add .
     git commit -m "Backup automatico - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
     Write-Host "--- Subiendo cambios a GitHub..."
-    git push origin main
+    git push $gitUrlWithToken main
 
     Write-Host "--- Gestionando backups (maximo $maxBackups copias)..."
     $backups = Get-ChildItem -Path $backupDir -Filter "minecraft-backup-*.zip" | Sort-Object CreationTime -Descending
@@ -84,4 +79,3 @@ function Hacer-Backup-Y-Subir {
 # --- Flujo de ejecución completo ---
 Detener-Stack
 Hacer-Backup-Y-Subir
-Levantar-Stack
