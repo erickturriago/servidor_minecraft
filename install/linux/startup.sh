@@ -3,7 +3,7 @@
 
 # --- CONFIGURACIÓN ---
 COMPRESSED_DATA="data.zip"
-INSTALL_DIR="$(dirname "$(realpath "$0")")/../.."
+INSTALL_DIR="/opt/servidor_minecraft"
 # ---------------------
 
 # --- FUNCIONES ---
