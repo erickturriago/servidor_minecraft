@@ -35,7 +35,7 @@ git add .
 git commit -m "Backup automatico - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
 Write-Host "--- Subiendo cambios a GitHub..."
-git push $gitUrlWithToken master
+git push $gitUrlWithToken main
 
 Write-Host "--- Gestionando backups (maximo $maxBackups copias)..."
 $backups = Get-ChildItem -Path $backupDir -Filter "minecraft-backup-*.zip" | Sort-Object CreationTime -Descending

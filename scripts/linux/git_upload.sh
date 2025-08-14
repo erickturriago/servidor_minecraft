@@ -37,7 +37,7 @@ git add .
 git commit -m "Backup automatico - $(date +"%Y-%m-%d %H:%M:%S")"
 
 echo "--- Subiendo cambios a GitHub..."
-git push "$GIT_URL_WITH_TOKEN" master
+git push "$GIT_URL_WITH_TOKEN" main
 
 echo "--- Gestionando backups (maximo $MAX_BACKUPS copias)..."
 while [ $(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup' | wc -l) -gt $MAX_BACKUPS ]; do
