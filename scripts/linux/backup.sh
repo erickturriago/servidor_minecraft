@@ -2,7 +2,7 @@
 # Script para crear un backup del mundo y los plugins, deteniendo y reiniciando el servidor.
 
 STACK_NAME="minecraft_stack"
-BASE_DIR="$(dirname "$0")/../../"
+BASE_DIR="$(dirname "$(realpath "$0")")/../../"
 BACKUP_DIR="$BASE_DIR/backups"
 DATA_DIR="$BASE_DIR/data"
 
