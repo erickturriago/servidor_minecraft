@@ -77,6 +77,7 @@ function hacer_backup_y_subir() {
     echo "--- Agregando archivos al control de versiones..."
     # Asegura que el .gitignore exista y tenga la regla correcta
     echo "data/" > .gitignore
+    echo "token.txt" >> .gitignore
     git add .
     git commit -m "Backup automatico - $(date +"%Y-%m-%d %H:%M:%S")"
 
