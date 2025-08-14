@@ -7,6 +7,14 @@ $compressedData = "data.zip"
 # ---------------------
 
 # --- FUNCIONES ---
+function Get-GitHubToken {
+    Write-Host ""
+    $pat = Read-Host "--- Por favor, ingresa tu Personal Access Token (PAT) de GitHub"
+    $env:GITHUB_TOKEN = $pat
+    Write-Host "--- Token de GitHub configurado en la variable de entorno GITHUB_TOKEN para esta sesión."
+    Write-Host ""
+}
+
 function Check-And-Install-Git {
     if (-not (Get-Command "git.exe" -ErrorAction SilentlyContinue)) {
         Write-Host "--- Git no encontrado. Instalando..."
@@ -15,6 +23,7 @@ function Check-And-Install-Git {
     } else {
         Write-Host "--- Git ya esta instalado."
     }
+    Get-GitHubToken # Llama a la nueva función para pedir el token
 }
 
 function Check-And-Install-Docker {
@@ -37,10 +46,10 @@ function Decompress-Data {
         Write-Host "--- Archivo de datos comprimido '$compressedData' no encontrado. Saliendo."
         exit
     }
-    
+
     # Crea la carpeta 'data' si no existe
     New-Item -Path "data" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
-    
+
     Write-Host "--- Descomprimiendo la carpeta de datos..."
     Expand-Archive -Path $compressedData -DestinationPath ".\data" -Force
     Write-Host "--- Carpeta 'data' descomprimida con exito."
@@ -48,11 +57,11 @@ function Decompress-Data {
 
 function Start-And-Schedule {
     Write-Host "--- Configurando y levantando el servidor..."
-    
+
     # Se asume que el script se ejecuta desde la raíz del proyecto
     .\scripts\win\levantar.ps1
     .\scripts\win\schedule_backup.ps1
-    
+
     Write-Host "--- Servidor iniciado y tareas de backup programadas."
 }
 
