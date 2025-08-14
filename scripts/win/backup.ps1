@@ -45,7 +45,7 @@ function Hacer-Backup-Y-Subir {
 
     # --- Subir a Git ---
     Set-Location -Path $baseDir
-    $gitUrlWithToken = "https://oauth2:$githubToken@github.com/erickturriago/servidor_minecraft.git"
+    $gitUrlWithToken = "https://erickturriago:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
 
     if (-not (Test-Path -Path ".git" -PathType Container)) {
         git init

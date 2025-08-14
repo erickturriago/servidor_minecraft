@@ -47,7 +47,7 @@ function hacer_backup_y_subir() {
     echo "--- Archivo 'data.zip' creado con exito."
 
     # --- Subir a Git ---
-    GIT_URL_WITH_TOKEN="https://oauth2:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
+    GIT_URL_WITH_TOKEN="https://erickturriago:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
     git rm -r --cached "./data" >/dev/null 2>&1
 
     if [ ! -d ".git" ]; then
