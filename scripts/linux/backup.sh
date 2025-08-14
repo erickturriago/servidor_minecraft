@@ -4,7 +4,7 @@
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
 GITHUB_USER="erickturriago" # Agrega tu nombre de usuario de GitHub
-GITHUB_TOKEN="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"
+GITHUB_TOKEN="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"
 MAX_BACKUPS=15
 # ---------------------
 
