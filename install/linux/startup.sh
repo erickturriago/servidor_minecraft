@@ -48,8 +48,9 @@ decompress_data() {
         echo "--- Archivo de datos comprimido '$COMPRESSED_DATA' no encontrado. Saliendo."
         exit 1
     fi
+    mkdir ./data
     echo "--- Descomprimiendo la carpeta de datos..."
-    unzip -o "$COMPRESSED_DATA" -d "./"
+    unzip -o "$COMPRESSED_DATA" -d "./data"
     echo "--- Carpeta 'data' descomprimida con exito."
 }
 

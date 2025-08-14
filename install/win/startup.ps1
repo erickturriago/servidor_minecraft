@@ -2,8 +2,7 @@
 # Debe ser ejecutado con permisos de Administrador en PowerShell
 
 # --- CONFIGURACIÓN ---
-$repoUrl = "TU_URL_DEL_REPOSITORIO"
-$installDir = "C:\minecraft-server"
+# La carpeta de datos comprimida debe estar en la raíz del proyecto.
 $compressedData = "data.zip"
 # ---------------------
 
@@ -33,31 +32,27 @@ function Check-And-Install-Docker {
     }
 }
 
-function Clone-Repo {
-    if (Test-Path -Path $installDir) {
-        Write-Host "--- El directorio de instalacion ya existe. Saliendo."
-        exit
-    }
-    Write-Host "--- Clonando el repositorio de GitHub..."
-    git clone $repoUrl $installDir
-    Write-Host "--- Repositorio clonado con exito en $installDir."
-}
-
 function Decompress-Data {
     if (-not (Test-Path -Path $compressedData)) {
         Write-Host "--- Archivo de datos comprimido '$compressedData' no encontrado. Saliendo."
         exit
     }
+    
+    # Crea la carpeta 'data' si no existe
+    New-Item -Path "data" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+    
     Write-Host "--- Descomprimiendo la carpeta de datos..."
-    Expand-Archive -Path $compressedData -DestinationPath (Join-Path -Path $installDir -ChildPath $null) -Force
+    Expand-Archive -Path $compressedData -DestinationPath ".\data" -Force
     Write-Host "--- Carpeta 'data' descomprimida con exito."
 }
 
 function Start-And-Schedule {
     Write-Host "--- Configurando y levantando el servidor..."
-    Set-Location -Path $installDir
+    
+    # Se asume que el script se ejecuta desde la raíz del proyecto
     .\scripts\win\levantar.ps1
     .\scripts\win\schedule_backup.ps1
+    
     Write-Host "--- Servidor iniciado y tareas de backup programadas."
 }
 
@@ -65,7 +60,6 @@ function Start-And-Schedule {
 Write-Host "--- Iniciando el script de instalacion del servidor de Minecraft..."
 Check-And-Install-Git
 Check-And-Install-Docker
-Clone-Repo
 Decompress-Data
 Start-And-Schedule
 Write-Host "--- Configuracion completa! El servidor esta funcionando."
