@@ -90,6 +90,13 @@ function Hacer-Backup-Y-Subir {
     Write-Host "--- Sincronizacion con GitHub y gestion de backups completada."
 }
 
+function Levantar-Stack {
+    Set-Location -Path $baseDir
+    Write-Host "--- Levantando stack: $stackName..."
+    docker compose -p $stackName up -d
+    Write-Host "--- Stack '$stackName' levantado con exito."
+}
+
 # Comprobación de servicio activo
 
 if ((docker logs mc-server | Select-Object -Last 1) -match "Server empty for 60 seconds") {
@@ -102,3 +109,4 @@ Write-Host "Servidor activo, continuando..."
 # --- Flujo de ejecución completo ---
 Detener-Stack
 Hacer-Backup-Y-Subir
+Levantar-Stack
