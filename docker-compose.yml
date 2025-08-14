@@ -1,0 +1,21 @@
+services:
+  mc:
+    image: itzg/minecraft-server:latest
+    container_name: mc-server
+    ports:
+      - "25565:25565"
+    healthcheck:
+      test: ["CMD", "/usr/bin/mc-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      EULA: "TRUE"
+      TYPE: "SPIGOT"   # Puedes cambiarlo a SPIGOT si prefieres
+      MEMORY: "4G"    # Ajusta RAM según tu máquina
+      ONLINE_MODE: "FALSE"
+      SEED: "-4361528937055201680"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
