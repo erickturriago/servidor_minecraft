@@ -4,8 +4,6 @@
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
 GITHUB_USER="erickturriago" # Agrega tu nombre de usuario de GitHub
-# Aquí está tu nuevo token de acceso personal (PAT)
-GITHUB_TOKEN="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"
 MAX_BACKUPS=15
 # ---------------------
 
@@ -49,6 +47,7 @@ function hacer_backup_y_subir() {
 
     # --- Subir a Git ---
     # Usa el nombre de usuario para la autenticacion, es mas fiable
+    # El token se lee de la variable de entorno GITHUB_TOKEN
     GIT_AUTH_URL="https://$GITHUB_USER:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
 
     # Limpia el cache de Git de la carpeta data/
