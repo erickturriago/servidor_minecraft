@@ -1,8 +1,9 @@
 # Script para crear un backup y subirlo a Git, deteniendo y reiniciando el servidor.
+# Es necesario ejecutar esto en PowerShell
 
 # --- CONFIGURACIÓN ---
 $stackName = "minecraft_stack"
-$githubRepo = "https://github.com/tu_usuario/erickturriago/servidor_minecraft.git"
+$githubRepo = "https://github.com/erickturriago/servidor_minecraft.git"
 $githubToken = "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"
 $maxBackups = 15
 # ---------------------
@@ -15,14 +16,14 @@ $compressedData = Join-Path -Path $baseDir -ChildPath "data.zip"
 function Detener-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Deteniendo stack: $stackName..."
-    docker compose -p $stackName down
+    docker-compose -p $stackName down
     Write-Host "--- Stack '$stackName' detenido con exito."
 }
 
 function Levantar-Stack {
     Set-Location -Path $baseDir
     Write-Host "--- Levantando stack: $stackName..."
-    docker compose -p $stackName up -d
+    docker-compose -p $stackName up -d
     Write-Host "--- Stack '$stackName' levantado con exito."
 }
 
@@ -45,24 +46,28 @@ function Hacer-Backup-Y-Subir {
 
     # --- Subir a Git ---
     Set-Location -Path $baseDir
-    $gitUrlWithToken = "https://erickturriago:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
+    $githubUser = "erickturriago"
+    $gitUrlWithToken = "https://$githubUser:$githubToken@github.com/erickturriago/servidor_minecraft.git"
 
     if (-not (Test-Path -Path ".git" -PathType Container)) {
         git init
         git remote add origin $githubRepo
+    } else {
+        git remote remove origin -ErrorAction SilentlyContinue | Out-Null
+        git remote add origin $gitUrlWithToken
     }
 
+    Write-Host "--- Agregando archivos al control de versiones..."
     Set-Content -Path ".gitignore" -Value "data/"
 
     # Limpia el cache de Git de la carpeta data/ antes de proceder
-    git rm -r --cached "data" | Out-Null
+    git rm -r --cached "data" -ErrorAction SilentlyContinue | Out-Null
     
-    Write-Host "--- Agregando archivos al control de versiones..."
     git add .
     git commit -m "Backup automatico - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
     Write-Host "--- Subiendo cambios a GitHub..."
-    git push $gitUrlWithToken main
+    git push origin main
 
     Write-Host "--- Gestionando backups (maximo $maxBackups copias)..."
     $backups = Get-ChildItem -Path $backupDir -Filter "minecraft-backup-*.zip" | Sort-Object CreationTime -Descending

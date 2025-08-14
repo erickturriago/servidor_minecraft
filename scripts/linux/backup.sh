@@ -47,12 +47,19 @@ function hacer_backup_y_subir() {
     echo "--- Archivo 'data.zip' creado con exito."
 
     # --- Subir a Git ---
-    GIT_URL_WITH_TOKEN="https://erickturriago:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
-    git rm -r --cached "./data" >/dev/null 2>&1
+    # La variable GITHUB_USER se usará para la autenticación
+    GITHUB_USER="erickturriago"
+    GIT_URL_WITH_TOKEN="https://$GITHUB_USER:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
+
+    git rm -r --cached "data" >/dev/null 2>&1
 
     if [ ! -d ".git" ]; then
         git init
         git remote add origin "$GITHUB_REPO"
+    else
+        # Limpia y vuelve a configurar el remote para asegurar que el token sea usado
+        git remote remove origin >/dev/null 2>&1
+        git remote add origin "$GIT_URL_WITH_TOKEN"
     fi
 
     echo "--- Agregando archivos al control de versiones..."
@@ -61,7 +68,7 @@ function hacer_backup_y_subir() {
     git commit -m "Backup automatico - $(date +"%Y-%m-%d %H:%M:%S")"
 
     echo "--- Subiendo cambios a GitHub..."
-    git push "$GIT_URL_WITH_TOKEN" main
+    git push origin main
 
     echo "--- Gestionando backups (maximo $MAX_BACKUPS copias)..."
     while [ $(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup' | wc -l) -gt $MAX_BACKUPS ]; do
