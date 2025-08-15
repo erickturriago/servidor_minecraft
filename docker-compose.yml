@@ -14,7 +14,7 @@ services:
       TYPE: "SPIGOT"   # Puedes cambiarlo a SPIGOT si prefieres
       MEMORY: "4G"    # Ajusta RAM según tu máquina
       ONLINE_MODE: "FALSE"
-      SEED: "-4361528937055201680"
+      SEED: "391813167581234055"
     volumes:
       - ./data:/data
     restart: unless-stopped
