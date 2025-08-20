@@ -8,13 +8,6 @@ INSTALL_DIR="/opt/servidor_minecraft"
 
 # --- FUNCIONES ---
 
-
-
-
-
-
-
-
 check_and_install_git() {
     if ! command -v git &> /dev/null; then
         echo "--- Git no encontrado. Instalando..."
@@ -29,7 +22,22 @@ check_and_install_git() {
     git config --global user.email "turriago-erick@hotmail.com"
     git config --global user.name "Erick Turriago"
     echo "--- Git configurado con autor."
+}
 
+check_and_install_git_lfs() {
+    if ! command -v git-lfs &> /dev/null; then
+        echo "--- Git LFS no encontrado. Instalando..."
+        sudo apt-get update
+        sudo apt-get install -y git-lfs
+        echo "--- Git LFS instalado."
+    else
+        echo "--- Git LFS ya está instalado."
+    fi
+
+    echo "--- Inicializando Git LFS..."
+    git lfs install
+    git lfs pull
+    echo "--- Archivos LFS descargados correctamente."
 }
 
 check_and_install_unzip() {
@@ -68,7 +76,7 @@ check_and_install_docker() {
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
         
         sudo usermod -aG docker "$USER"
-        echo "--- Docker instalado. Por favor, cierra la sesion y vuelve a entrar para que los cambios tengan efecto."
+        echo "--- Docker instalado. Por favor, cierra la sesión y vuelve a entrar para que los cambios tengan efecto."
     else
         echo "--- Docker ya está instalado."
     fi
@@ -95,10 +103,12 @@ decompress_data() {
         echo "--- Archivo de datos comprimido '$COMPRESSED_DATA' no encontrado. Saliendo."
         exit 1
     fi
+
     mkdir -p "$INSTALL_DIR/data"
-    echo "--- Descomprimiendo la carpeta de datos..."
-    unzip -o "$INSTALL_DIR/$COMPRESSED_DATA" -d "$INSTALL_DIR/data"
-    echo "--- Carpeta 'data' descomprimida con éxito."
+
+    echo "--- Descomprimiendo el mundo de Minecraft..."
+    unzip -o -O UTF-8 "$INSTALL_DIR/$COMPRESSED_DATA" -d "$INSTALL_DIR/data"
+    echo "--- Mundo restaurado en '$INSTALL_DIR/data'."
 }
 
 start_and_schedule() {
@@ -112,6 +122,7 @@ start_and_schedule() {
 # --- EJECUCIÓN ---
 echo "--- Iniciando el script de instalación del servidor de Minecraft..."
 check_and_install_git
+check_and_install_git_lfs
 check_and_install_unzip
 check_and_install_zip
 check_and_install_docker
