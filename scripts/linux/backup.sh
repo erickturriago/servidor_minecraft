@@ -1,10 +1,11 @@
 #!/bin/bash
-# Script para crear un backup y subirlo a Git, deteniendo y reiniciando el servidor.
+# Script para crear un backup y subirlo a Google Drive, deteniendo y reiniciando el servidor.
 
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
-GITHUB_USER="erickturriago"
 MAX_BACKUPS=20
+REMOTE="gdrive"
+REMOTE_DIR="Backups_Minecraft"
 # ---------------------
 
 BASE_DIR="$(dirname "$(realpath "$0")")/../../"
@@ -12,19 +13,7 @@ BACKUP_DIR="$BASE_DIR/backups"
 DATA_DIR="$BASE_DIR/data"
 COMPRESSED_DATA="$BASE_DIR/data.zip"
 
-cd "$BASE_DIR" || exit
-
-# --- LECTURA DEL TOKEN ---
-if [ -f "$BASE_DIR/token.txt" ]; then
-    GITHUB_TOKEN=$(head -n 1 "$BASE_DIR/token.txt")
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo "--- ERROR: El archivo token.txt está vacío."
-        exit 1
-    fi
-else
-    echo "--- ERROR: Archivo token.txt no encontrado en la raíz del proyecto."
-    exit 1
-fi
+mkdir -p "$BACKUP_DIR"
 
 detener_stack() {
     echo "--- Deteniendo stack: $STACK_NAME..."
@@ -63,50 +52,27 @@ hacer_backup_y_subir() {
     zip -r -q "$backup_file" "${items[@]}"
     echo "--- Backup local completado."
 
-    # --- Preparar para Git ---
-    echo "--- Creando data.zip para GitHub..."
+    # --- Crear/actualizar data.zip ---
+    echo "--- Creando data.zip..."
     rm -f "$COMPRESSED_DATA"
     zip -r -q "$COMPRESSED_DATA" "${items[@]}"
-    echo "--- Archivo 'data.zip' creado con éxito."
+    echo "--- data.zip creado con éxito."
 
-    # --- Subir a Git ---
-    GIT_AUTH_URL="https://$GITHUB_USER:$GITHUB_TOKEN@github.com/erickturriago/servidor_minecraft.git"
+    # --- Subir a Google Drive ---
+    echo "--- Subiendo data.zip a Google Drive ($REMOTE:$REMOTE_DIR)..."
+    rclone copy "$COMPRESSED_DATA" "$REMOTE:$REMOTE_DIR" --progress --drive-chunk-size=64M
 
-    if [ ! -d ".git" ]; then
-        git init
-        git remote add origin "$GIT_AUTH_URL"
-        git branch -M main
-    else
-        git remote set-url origin "$GIT_AUTH_URL"
-    fi
+    echo "--- Subiendo backup con timestamp a $REMOTE_DIR/backups..."
+    rclone copy "$backup_file" "$REMOTE:$REMOTE_DIR/backups" --progress --drive-chunk-size=64M
 
-    # --- Configurar .gitignore ---
-    touch .gitignore
-    grep -qxF "data/" .gitignore || echo "data/" >> .gitignore
-    grep -qxF "token.txt" .gitignore || echo "token.txt" >> .gitignore
-
-    # Limpiar cache de data/
-    git rm -r --cached "data" >/dev/null 2>&1
-
-    echo "--- Sincronizando con GitHub (git pull)..."
-    git pull origin main --allow-unrelated-histories || true
-
-    echo "--- Agregando cambios a Git..."
-    git add .
-    git commit -m "Backup automático - $(date +"%Y-%m-%d %H:%M:%S")" >/dev/null || true
-
-    echo "--- Subiendo cambios a GitHub..."
-    git push -u origin main
-
-    # --- Gestión de backups ---
-    echo "--- Manteniendo máximo $MAX_BACKUPS backups..."
-    while [ $(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup' | wc -l) -gt $MAX_BACKUPS ]; do
-        OLDEST_BACKUP=$(ls -1t "$BACKUP_DIR" | grep 'minecraft-backup' | tail -n 1)
-        echo "--- Borrando backup antiguo: $OLDEST_BACKUP"
-        rm "$BACKUP_DIR/$OLDEST_BACKUP"
+    # --- Mantener máximo $MAX_BACKUPS en Drive ---
+    echo "--- Manteniendo máximo $MAX_BACKUPS backups en Google Drive..."
+    rclone ls "$REMOTE:$REMOTE_DIR/backups" | sort | head -n -$MAX_BACKUPS | awk '{print $2}' | while read -r oldfile; do
+        echo "--- Borrando backup antiguo en Drive: $oldfile"
+        rclone delete "$REMOTE:$REMOTE_DIR/backups/$oldfile"
     done
 
-    echo "--- Backup y sincronización completados."
+    echo "--- Backup y subida completados."
 }
 
 # --- Comprobación de servicio activo ---
