@@ -4,7 +4,7 @@
 # --- CONFIGURACIÓN ---
 COMPRESSED_DATA="data.zip"
 INSTALL_DIR="/opt/servidor_minecraft"
-REMOTE="gdrive:Backups_Minecraft/Servidor_Minecraft"
+REMOTE="gdrive:Servidor_Minecraft/"
 # ---------------------
 
 # --- FUNCIONES ---
