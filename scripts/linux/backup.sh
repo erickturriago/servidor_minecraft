@@ -7,7 +7,7 @@ MAX_BACKUPS=20
 REMOTE="gdrive:Servidor_Minecraft"
 # ---------------------
 
-BASE_DIR="$(dirname "$(realpath "$0")")/../../"
+BASE_DIR="/opt/servidor_minecraft"
 BACKUP_DIR="$BASE_DIR/backups"
 DATA_DIR="$BASE_DIR/data"
 COMPRESSED_DATA="$BASE_DIR/data.zip"
