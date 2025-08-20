@@ -14,51 +14,58 @@ COMPRESSED_DATA="$BASE_DIR/data.zip"
 
 mkdir -p "$BACKUP_DIR"
 
+# Función para detener el stack de Docker
 detener_stack() {
     echo "--- Deteniendo stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" down
     echo "--- Stack '$STACK_NAME' detenido con éxito."
 }
 
+# Función para levantar el stack de Docker
 levantar_stack() {
     echo "--- Levantando stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" up -d
     echo "--- Stack '$STACK_NAME' levantado con éxito."
 }
 
+# Función principal para hacer el backup y subirlo
 hacer_backup_y_subir() {
     local timestamp
     timestamp=$(date +"%Y%m%d_%H%M%S")
     local backup_file="$BACKUP_DIR/minecraft-backup-$timestamp.zip"
 
-    # --- Archivos a respaldar ---
+    # --- Archivos a respaldar (nombres relativos desde $DATA_DIR) ---
     local items=(
-        "$DATA_DIR/world"
-        "$DATA_DIR/world_nether"
-        "$DATA_DIR/world_the_end"
-        "$DATA_DIR/plugins"
-        "$DATA_DIR/server.properties"
-        "$DATA_DIR/spigot.yml"
-        "$DATA_DIR/bukkit.yml"
-        "$DATA_DIR/ops.json"
-        "$DATA_DIR/whitelist.json"
-        "$DATA_DIR/banned-ips.json"
-        "$DATA_DIR/banned-players.json"
-        "$DATA_DIR/permissions.yml"
+        "world"
+        "world_nether"
+        "world_the_end"
+        "plugins"
+        "server.properties"
+        "spigot.yml"
+        "bukkit.yml"
+        "ops.json"
+        "whitelist.json"
+        "banned-ips.json"
+        "banned-players.json"
+        "permissions.yml"
     )
 
-    # --- Backup local ---
-    echo "--- Creando backup local en $backup_file..."
-    zip -r -q "$backup_file" "${items[@]}"
-    echo "--- Backup local completado."
-
-    # --- Crear/actualizar data.zip ---
+    # --- Creando data.zip con el contenido directo de la carpeta 'data' ---
     echo "--- Creando data.zip..."
     rm -f "$COMPRESSED_DATA"
+    cd "$DATA_DIR" || exit 1
     zip -r -q "$COMPRESSED_DATA" "${items[@]}"
+    cd "$BASE_DIR" || exit 1
     echo "--- data.zip creado con éxito."
 
-    # --- Subir a Google Drive ---
+    # --- Creando backup local con timestamp ---
+    echo "--- Creando backup local en $backup_file..."
+    cd "$DATA_DIR" || exit 1
+    zip -r -q "$backup_file" "${items[@]}"
+    cd "$BASE_DIR" || exit 1
+    echo "--- Backup local completado."
+
+    # --- Subiendo a Google Drive ---
     echo "--- Subiendo data.zip a Google Drive ($REMOTE)..."
     rclone copy "$COMPRESSED_DATA" "$REMOTE" --progress --drive-chunk-size=64M
 
@@ -80,7 +87,7 @@ hacer_backup_y_subir() {
     echo "--- Backup y subida completados."
 }
 
-# --- Comprobación de servicio activo ---
+# --- Flujo de ejecución principal ---
 container_id=$(docker compose -p "$STACK_NAME" ps -q)
 if [ -z "$container_id" ]; then
     echo ">>> No se encontró un contenedor en ejecución para $STACK_NAME, abortando."
@@ -94,7 +101,6 @@ fi
 
 echo "Servidor activo, continuando..."
 
-# --- Flujo de ejecución ---
 detener_stack
 hacer_backup_y_subir
 levantar_stack
