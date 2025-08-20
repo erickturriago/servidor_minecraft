@@ -5,7 +5,7 @@
 STACK_NAME="minecraft_stack"
 MAX_BACKUPS=20
 REMOTE="gdrive"
-REMOTE_DIR="Backups_Minecraft"
+REMOTE_DIR="Servidor_Minecraft"
 # ---------------------
 
 BASE_DIR="$(dirname "$(realpath "$0")")/../../"
