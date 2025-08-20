@@ -4,6 +4,7 @@
 # --- CONFIGURACIÓN ---
 COMPRESSED_DATA="data.zip"
 INSTALL_DIR="/opt/servidor_minecraft"
+REMOTE="gdrive:Backups_Minecraft/Servidor_Minecraft"
 # ---------------------
 
 # --- FUNCIONES ---
@@ -18,26 +19,20 @@ check_and_install_git() {
         echo "--- Git ya está instalado."
     fi
 
-    # Configurar usuario y correo de Git para los commits
     git config --global user.email "turriago-erick@hotmail.com"
     git config --global user.name "Erick Turriago"
     echo "--- Git configurado con autor."
 }
 
-check_and_install_git_lfs() {
-    if ! command -v git-lfs &> /dev/null; then
-        echo "--- Git LFS no encontrado. Instalando..."
+check_and_install_rclone() {
+    if ! command -v rclone &> /dev/null; then
+        echo "--- rclone no encontrado. Instalando..."
         sudo apt-get update
-        sudo apt-get install -y git-lfs
-        echo "--- Git LFS instalado."
+        sudo apt-get install -y rclone
+        echo "--- rclone instalado."
     else
-        echo "--- Git LFS ya está instalado."
+        echo "--- rclone ya está instalado."
     fi
-
-    echo "--- Inicializando Git LFS..."
-    git lfs install
-    git lfs pull
-    echo "--- Archivos LFS descargados correctamente."
 }
 
 check_and_install_unzip() {
@@ -98,6 +93,13 @@ check_and_install_cron() {
     fi
 }
 
+download_data() {
+    echo "--- Descargando $COMPRESSED_DATA desde Google Drive..."
+    mkdir -p "$INSTALL_DIR"
+    rclone copy "$REMOTE/$COMPRESSED_DATA" "$INSTALL_DIR" --progress
+    echo "--- Descarga completa."
+}
+
 decompress_data() {
     if [ ! -f "$INSTALL_DIR/$COMPRESSED_DATA" ]; then
         echo "--- Archivo de datos comprimido '$COMPRESSED_DATA' no encontrado. Saliendo."
@@ -117,16 +119,21 @@ start_and_schedule() {
     ./scripts/linux/levantar.sh
     ./scripts/linux/schedule_backup.sh
     echo "--- Servidor iniciado y tareas de backup programadas."
+
+    echo "--- Subiendo backups existentes a Google Drive..."
+    rclone copy "$INSTALL_DIR/backups" "$REMOTE/backups" --progress
+    echo "--- Backups sincronizados en Google Drive."
 }
 
 # --- EJECUCIÓN ---
 echo "--- Iniciando el script de instalación del servidor de Minecraft..."
 check_and_install_git
-check_and_install_git_lfs
+check_and_install_rclone
 check_and_install_unzip
 check_and_install_zip
 check_and_install_docker
 check_and_install_cron
+download_data
 decompress_data
 start_and_schedule
 echo "--- Configuración completa! El servidor está funcionando."
