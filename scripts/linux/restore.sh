@@ -2,52 +2,60 @@
 # Script para restaurar un backup del mundo de Minecraft
 
 STACK_NAME="minecraft_stack"
-BASE_DIR="$(dirname "$0")/../../"
+BASE_DIR="$(cd "$(dirname "$0")/../../" && pwd)"
 BACKUP_DIR="$BASE_DIR/backups"
 DATA_DIR="$BASE_DIR/data"
+LOG_DIR="$BASE_DIR/logs"
 
-function detener_stack() {
+mkdir -p "$LOG_DIR"
+
+detener_stack() {
     cd "$BASE_DIR" || exit
     echo "--- Deteniendo stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" down
-    echo "--- Stack '$STACK_NAME' detenido con exito."
+    echo "--- Stack '$STACK_NAME' detenido con éxito."
 }
 
-function levantar_stack() {
+levantar_stack() {
     cd "$BASE_DIR" || exit
     echo "--- Levantando stack: $STACK_NAME..."
     docker compose -p "$STACK_NAME" up -d
-    echo "--- Stack '$STACK_NAME' levantado con exito."
+    echo "--- Stack '$STACK_NAME' levantado con éxito."
 }
 
+# Listar backups disponibles
+BACKUPS=($(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup' || true))
+
+if [ ${#BACKUPS[@]} -eq 0 ]; then
+    echo "--- No se encontraron backups en $BACKUP_DIR"
+    exit 1
+fi
+
 echo "--- Backups disponibles:"
-select BACKUP_FILE in $(ls -1 "$BACKUP_DIR" | grep 'minecraft-backup'); do
+select BACKUP_FILE in "${BACKUPS[@]}"; do
     if [ -n "$BACKUP_FILE" ]; then
-        echo "Se restaurara el backup $BACKUP_FILE. Quieres continuar? (s/n)"
-        read -r confirm
+        read -r -p "Se restaurará el backup $BACKUP_FILE. ¿Quieres continuar? (s/n): " confirm
         if [ "$confirm" != "s" ]; then
-            echo "--- Restauracion cancelada por el usuario."
+            echo "--- Restauración cancelada por el usuario."
             exit
         fi
 
-        echo "--- Deteniendo el servidor para la restauracion..."
+        echo "--- Deteniendo el servidor para la restauración..."
         detener_stack
 
-        echo "--- Restaurando desde $BACKUP_FILE..."
-        
         echo "--- Borrando la carpeta de datos actual..."
         rm -rf "$DATA_DIR"
         mkdir -p "$DATA_DIR"
 
-        echo "--- Descomprimiendo el backup..."
-        unzip "$BACKUP_DIR/$BACKUP_FILE" -d "$DATA_DIR"
-        
+        echo "--- Restaurando desde $BACKUP_FILE..."
+        unzip -o -q "$BACKUP_DIR/$BACKUP_FILE" -d "$DATA_DIR"
+
         echo "--- Iniciando el servidor nuevamente..."
         levantar_stack
-        echo "--- Restauracion completada."
-        break
+
+        echo "--- Restauración completada. 🎉"
+        exit 0
     else
-        echo "--- Seleccion invalida."
-        exit
+        echo "--- Selección inválida."
     fi
 done
