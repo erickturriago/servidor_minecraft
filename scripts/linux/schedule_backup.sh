@@ -2,18 +2,20 @@
 # Script para programar un backup automático usando crontab.
 
 # --- CONFIGURACIÓN ---
-# Frecuencia del backup en horas. Por ejemplo, 6 para cada 6 horas.
 FREQUENCY_HOURS=2
-# Nombre del script a ejecutar, relativo a la carpeta 'linux'
 BACKUP_SCRIPT="backup.sh"
+LOG_DIR="/opt/servidor_minecraft/logs"
 # ---------------------
 
-# Obtiene la ruta absoluta de la carpeta 'linux' donde se encuentra este script
+# Asegurar carpeta de logs
+mkdir -p "$LOG_DIR"
+
+# Obtiene la ruta absoluta del script de backup
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKUP_SCRIPT_PATH="$BASE_DIR/$BACKUP_SCRIPT"
 
-# Crear la entrada de crontab con la ruta absoluta
-CRON_JOB="0 */$FREQUENCY_HOURS * * * $BACKUP_SCRIPT_PATH"
+# Cron necesita rutas absolutas y PATH explícito
+CRON_JOB="0 */$FREQUENCY_HOURS * * * PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BACKUP_SCRIPT_PATH >> $LOG_DIR/backup.log 2>&1"
 
 # Verificar si la tarea ya existe
 if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT_PATH"; then
