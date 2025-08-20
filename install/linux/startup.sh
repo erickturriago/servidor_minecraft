@@ -108,6 +108,7 @@ start_and_schedule() {
     echo "--- Servidor iniciado y backups programados."
 
     echo "--- Sincronizando backups existentes con Google Drive..."
+    mkdir "$INSTALL_DIR/backups"
     rclone copy "$INSTALL_DIR/backups" "$REMOTE/backups" --progress
     echo "--- Backups sincronizados."
 }
