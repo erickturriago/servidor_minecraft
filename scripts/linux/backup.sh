@@ -4,8 +4,7 @@
 # --- CONFIGURACIÓN ---
 STACK_NAME="minecraft_stack"
 MAX_BACKUPS=20
-REMOTE="gdrive"
-REMOTE_DIR="Servidor_Minecraft"
+REMOTE="gdrive:Servidor_Minecraft"
 # ---------------------
 
 BASE_DIR="$(dirname "$(realpath "$0")")/../../"
@@ -59,26 +58,37 @@ hacer_backup_y_subir() {
     echo "--- data.zip creado con éxito."
 
     # --- Subir a Google Drive ---
-    echo "--- Subiendo data.zip a Google Drive ($REMOTE:$REMOTE_DIR)..."
-    rclone copy "$COMPRESSED_DATA" "$REMOTE:$REMOTE_DIR" --progress --drive-chunk-size=64M
+    echo "--- Subiendo data.zip a Google Drive ($REMOTE)..."
+    rclone copy "$COMPRESSED_DATA" "$REMOTE" --progress --drive-chunk-size=64M
 
-    echo "--- Subiendo backup con timestamp a $REMOTE_DIR/backups..."
-    rclone copy "$backup_file" "$REMOTE:$REMOTE_DIR/backups" --progress --drive-chunk-size=64M
+    echo "--- Subiendo backup con timestamp a $REMOTE/backups..."
+    rclone copy "$backup_file" "$REMOTE/backups" --progress --drive-chunk-size=64M
 
-    # --- Mantener máximo $MAX_BACKUPS en Drive ---
+    # --- Mantener máximo $MAX_BACKUPS backups en Drive ---
     echo "--- Manteniendo máximo $MAX_BACKUPS backups en Google Drive..."
-    rclone ls "$REMOTE:$REMOTE_DIR/backups" | sort | head -n -$MAX_BACKUPS | awk '{print $2}' | while read -r oldfile; do
-        echo "--- Borrando backup antiguo en Drive: $oldfile"
-        rclone delete "$REMOTE:$REMOTE_DIR/backups/$oldfile"
-    done
+    local files_to_delete
+    files_to_delete=$(rclone lsf --files-only --format "p" --sort "modtime" "$REMOTE/backups" | head -n -$MAX_BACKUPS)
+
+    if [ -n "$files_to_delete" ]; then
+        while IFS= read -r oldfile; do
+            echo "--- Borrando backup antiguo en Drive: $oldfile"
+            rclone delete "$REMOTE/backups/$oldfile"
+        done <<< "$files_to_delete"
+    fi
 
     echo "--- Backup y subida completados."
 }
 
 # --- Comprobación de servicio activo ---
-if docker logs mc-server | tail -n 1 | grep -q "Server empty for 60 seconds"; then
-    echo "Servidor inactivo, deteniendo script."
-    exit 0
+container_id=$(docker compose -p "$STACK_NAME" ps -q)
+if [ -z "$container_id" ]; then
+    echo ">>> No se encontró un contenedor en ejecución para $STACK_NAME, abortando."
+    exit 1
+fi
+
+if ! docker ps -q --no-trunc | grep -q "$container_id"; then
+    echo ">>> El contenedor de Minecraft no está corriendo, abortando."
+    exit 1
 fi
 
 echo "Servidor activo, continuando..."
