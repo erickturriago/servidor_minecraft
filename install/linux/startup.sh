@@ -101,6 +101,11 @@ decompress_data() {
 }
 
 start_and_schedule() {
+    echo "--- Configurando permisos para el contenedor..."
+    sudo chown -R 1000:1000 "$INSTALL_DIR/data"
+    sudo chmod -R u+rwx "$INSTALL_DIR/data"
+    echo "--- Permisos ajustados con éxito."
+
     echo "--- Levantando servidor y programando backups..."
     cd "$INSTALL_DIR" || exit 1
     ./scripts/linux/levantar.sh
