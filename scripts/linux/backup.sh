@@ -27,7 +27,8 @@ levantar_stack() {
 }
 
 hacer_backup_y_subir() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local backup_file="$BACKUP_DIR/minecraft-backup-$timestamp.zip"
 
     # --- Archivos a respaldar ---
@@ -64,10 +65,10 @@ hacer_backup_y_subir() {
     echo "--- Subiendo backup con timestamp a $REMOTE/backups..."
     rclone copy "$backup_file" "$REMOTE/backups" --progress --drive-chunk-size=64M
 
-    # --- Mantener máximo $MAX_BACKUPS backups en Drive ---
+    # --- Mantener máximo $MAX_BACKUPS en Drive ---
     echo "--- Manteniendo máximo $MAX_BACKUPS backups en Google Drive..."
     local files_to_delete
-    files_to_delete=$(rclone lsf --files-only --format "p" --sort "modtime" "$REMOTE/backups" | head -n -$MAX_BACKUPS)
+    files_to_delete=$(rclone ls "$REMOTE/backups" | sort | head -n -$MAX_BACKUPS | awk '{print $2}')
 
     if [ -n "$files_to_delete" ]; then
         while IFS= read -r oldfile; do
